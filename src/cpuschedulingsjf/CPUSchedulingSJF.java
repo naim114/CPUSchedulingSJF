@@ -60,13 +60,14 @@ public class CPUSchedulingSJF {
         printOutput(1, process, arrival, burst, time_process, end_time);
 
         /**
-         * STEP 2 - Sort arrival time to ascending order (burst)
+         * STEP 2 - Sort burst to ascending order
          */
 
         // Selection sort
-        for (int i = 0; i < process.size() - 1; i++) {
+        for (int i = 0; i < process.size(); i++) {
             int min_index = i;
 
+            // Find minimum index for arival
             for (int j = i + 1; j < process.size(); j++) {
                 if (burst.get(j) < burst.get(min_index)) {
                     min_index = j;
@@ -97,7 +98,7 @@ public class CPUSchedulingSJF {
          */
 
         // Sort by arrival
-        for (int i = 0; i < process.size() - 1; i++) {
+        for (int i = 0; i < process.size(); i++) {
             int min_index = i;
 
             for (int j = i + 1; j < process.size(); j++) {
@@ -128,12 +129,12 @@ public class CPUSchedulingSJF {
         }
 
         // Sort based on burst and end time process
-        for (int i = 0; i < process.size() - 1; i++) {
-            double min_burst = 0;
-
+        for (int i = 0; i < process.size(); i++) {
             if (i == 0) {
                 end_time.set(0, burst.get(0) / 10);
             } else {
+                double min_burst = 0;
+                
                 // find minimum burst
                 for (int j = i; j < process.size(); j++) {
                     if (arrival.get(j) <= end_time.get(i - 1)) {
@@ -205,58 +206,12 @@ public class CPUSchedulingSJF {
         // aging var
         double w1 = 1.0;
         double w2 = 2.0;
-        double min_arrival = 0;
-        double min_rank = 0;
-
-        // Sort by arrival
-        // for (int i = 0; i < process.size() - 1; i++) {
-        // int min_index = i;
-        //
-        // for (int j = i + 1; j < process.size(); j++) {
-        // if (arrival.get(j) < arrival.get(min_index)) {
-        // min_index = j;
-        // }
-        // }
-        //
-        // // Sorting arrival time
-        // double smallerNumber = arrival.get(min_index);
-        // arrival.set(min_index, arrival.get(i));
-        // arrival.set(i, smallerNumber);
-        //
-        // // Sorting burst time
-        // smallerNumber = burst.get(min_index);
-        // burst.set(min_index, burst.get(i));
-        // burst.set(i, smallerNumber);
-        //
-        // // Sorting time_process time
-        // smallerNumber = time_process.get(min_index);
-        // time_process.set(min_index, time_process.get(i));
-        // time_process.set(i, smallerNumber);
-        //
-        // // Sorting end_time time
-        // smallerNumber = end_time.get(min_index);
-        // end_time.set(min_index, end_time.get(i));
-        // end_time.set(i, smallerNumber);
-        //
-        // // Sorting start
-        // smallerNumber = start.get(min_index);
-        // start.set(min_index, start.get(i));
-        // start.set(i, smallerNumber);
-        //
-        // // Sorting waiting
-        // smallerNumber = waiting.get(min_index);
-        // waiting.set(min_index, waiting.get(i));
-        // waiting.set(i, smallerNumber);
-        //
-        // // Sorting process
-        // int smallerNumberI = process.get(min_index);
-        // process.set(min_index, process.get(i));
-        // process.set(i, smallerNumberI);
-        // }
-
-        // initialize index 0
+        double min_arrival = 100;
+        double min_rank = 100;
+        double min_length = 100;
+        
         for (int i = 0; i < process.size(); i++) {
-            System.out.println("i: " + i);
+            // Initialize index 0
             // Find min arrival
             for (int j = i; j < process.size(); j++) {
                 if (j == 0) {
@@ -268,7 +223,7 @@ public class CPUSchedulingSJF {
                 }
             }
 
-            int min_rank_index = 0;
+            int min_rank_index = 100;
 
             // Set rank if arrival equal to min arrival
             for (int j = i; j < process.size(); j++) {
@@ -326,147 +281,66 @@ public class CPUSchedulingSJF {
 
             // initialize index that not 0
             if (i != 0) {
-                // set length
+                int min_length_index = 100;
+                
+                // set length if arrival below previous index end time
                 for (int j = i; j < process.size(); j++) {
                     if (arrival.get(j) <= end_time.get(i - 1)) {
                         length.set(j, (double) Math.round((end_time.get(i - 1) - arrival.get(j)) * 100) / 100);
+                        
+                        if (j <= min_length_index) {
+                            min_length_index = j;
+                        }
                     }
                 }
 
-                // compare
+                // Find min length
                 for (int j = i; j < process.size(); j++) {
                     if (arrival.get(j) <= end_time.get(i - 1)) {
-                        length.set(j, (double) Math.round((end_time.get(i - 1) - arrival.get(j)) * 100) / 100);
-
-                        System.out.println(process.get(j) + " --> " + arrival.get(j) + " < " + end_time.get(i - 1)
-                                + " --> " + length.get(j));
+                        if (j == min_length_index) {
+                            min_length = length.get(min_length_index);
+                        } else {
+                            if (length.get(j) <= min_length) {
+                                min_length = length.get(j);
+                            }
+                        }
                     }
+                }
+
+                for (int j = i; j < process.size(); j++) {
+                    if (min_length == length.get(j)) {
+                        int temp_process = process.get(i);
+                        double temp_arrival = arrival.get(i);
+                        double temp_start = start.get(i);
+                        double temp_burst = burst.get(i);
+                        double temp_time_process = time_process.get(i);
+                        double temp_end_time = end_time.get(i);
+                        double temp_waiting = waiting.get(i);
+                        double temp_length = length.get(i);
+
+                        process.set(i, process.get(j));
+                        arrival.set(i, arrival.get(j));
+                        start.set(i, start.get(j));
+                        burst.set(i, burst.get(j));
+                        time_process.set(i, time_process.get(j));
+                        end_time.set(i, end_time.get(j));
+                        waiting.set(i, waiting.get(j));
+                        length.set(i, length.get(j));
+                        
+                        process.set(j, temp_process);
+                        arrival.set(j, temp_arrival);
+                        start.set(j, temp_start);
+                        burst.set(j, temp_burst);
+                        time_process.set(j, temp_time_process);
+                        end_time.set(j, temp_end_time);
+                        waiting.set(j, temp_waiting);
+                        length.set(j, temp_length);
+                    }
+                    
+                    rank.set(j, w1 * length.get(j) + w2 * time_process.get(j));
                 }
             }
         }
-
-        // for (int i = 0; i < process.size(); i++) {
-        // if (i != 0) {
-        // // find minimum rank
-        // for (int j = i; j < process.size(); j++) {
-        // // if arrival less than previous end time
-        // if (arrival.get(j) <= end_time.get(i - 1)) {
-        // System.out.println(process.get(j));
-        //
-        // length.set(j, end_time.get(j - 1) - arrival.get(j));
-        // rank.set(j, w1*length.get(j)+w2*time_process.get(j));
-        //
-        // // store minimum rank
-        // if (j == i) {
-        // min_rank = rank.get(j);
-        // } else if (min_rank > rank.get(j)) {
-        // min_rank = rank.get(j);
-        // }
-        // }
-        // }
-        //
-        // for (int j = i; j < process.size(); j++) {
-        // if (min_rank == rank.get(j)) {
-        // int temp_process = process.get(i);
-        // double temp_arrival = arrival.get(i);
-        // double temp_start = start.get(i);
-        // double temp_burst = burst.get(i);
-        // double temp_time_process = time_process.get(i);
-        // double temp_end_time = end_time.get(i);
-        // double temp_waiting = waiting.get(i);
-        //
-        // process.set(i, process.get(j));
-        // arrival.set(i, arrival.get(j));
-        // start.set(i, start.get(j));
-        // burst.set(i, burst.get(j));
-        // time_process.set(i, time_process.get(j));
-        // end_time.set(i, end_time.get(j));
-        // waiting.set(i, waiting.get(j));
-        //
-        // process.set(j, temp_process);
-        // arrival.set(j, temp_arrival);
-        // start.set(j, temp_start);
-        // burst.set(j, temp_burst);
-        // time_process.set(j, temp_time_process);
-        // end_time.set(j, temp_end_time);
-        // waiting.set(j, temp_waiting);
-        // }
-        // }
-        // }
-        // }
-
-        // System.out.println("Min arrival: " + min_arrival);
-        // System.out.println("Min Rank: " + min_rank);
-
-        // Calc length & rank
-        // for (int i = 0; i < process.size(); i++) {
-        // double min_rank = 0;
-        // // calc length
-        // if (i == 0) {
-        // length.set(0, 0.0);
-        // rank.set(i, (w1 * length.get(i) + w2 * time_process.get(i)));
-        // } else {
-        // // find minimum rank
-        // for (int j = i; j < process.size(); j++) {
-        // // if arrival less than previous end time
-        // if (arrival.get(j) <= end_time.get(i - 1)) {
-        // // calculate length & rank
-        // length.set(i, end_time.get(i - 1) - arrival.get(i));
-        // rank.set(i, ((w1 * length.get(i)) + (w2 * time_process.get(i))));
-        //
-        // // store minimum rank
-        // if (j == i) {
-        // min_rank = rank.get(j);
-        // } else if (min_rank > rank.get(j)) {
-        // min_rank = rank.get(j);
-        // }
-        //
-        // System.out.println("\nLength: " + length.get(i));
-        // System.out.println("Rank: " + rank.get(i));
-        // System.out.println("Min Rank: " + min_rank);
-        // }
-        // }
-        //
-        // for (int j = i; j < process.size(); j++) {
-        // if (min_rank == rank.get(j)) {
-        // // set length & rank
-        //// length.set(i, end_time.get(i - 1) - arrival.get(i));
-        //// length.set(i, (double) Math.round((end_time.get(i - 1) - arrival.get(i)) *
-        // 100) / 100);
-        //// rank.set(i, (w1 * length.get(i) + w2 * end_time.get(i)));
-        //
-        // int temp_process = process.get(i);
-        // double temp_arrival = arrival.get(i);
-        // double temp_start = start.get(i);
-        // double temp_burst = burst.get(i);
-        // double temp_time_process = time_process.get(i);
-        // double temp_end_time = end_time.get(i);
-        // double temp_waiting = waiting.get(i);
-        //
-        // process.set(i, process.get(j));
-        // arrival.set(i, arrival.get(j));
-        // start.set(i, start.get(j));
-        // burst.set(i, burst.get(j));
-        // time_process.set(i, time_process.get(j));
-        // end_time.set(i, end_time.get(j));
-        // waiting.set(i, waiting.get(j));
-        //
-        // process.set(j, temp_process);
-        // arrival.set(j, temp_arrival);
-        // start.set(j, temp_start);
-        // burst.set(j, temp_burst);
-        // time_process.set(j, temp_time_process);
-        // end_time.set(j, temp_end_time);
-        // waiting.set(j, temp_waiting);
-        //
-        // break;
-        // }
-        // }
-        // }
-        //
-        // // calc rank
-        //// rank.set(i, (w1 * length.get(i) + w2 * end_time.get(i)));
-        // }
 
         // Output Step 5
         printOutput3(5, cycle, process, arrival, start, burst, time_process, length, rank, end_time, waiting);
